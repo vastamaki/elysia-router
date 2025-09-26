@@ -1,0 +1,48 @@
+{
+  "name": "elysia-router",
+  "version": "1.0.3",
+  "description": "A filesystem-based router plugin for Elysia with automatic route discovery and TypeScript support",
+  "keywords": [
+    "elysia",
+    "router",
+    "filesystem",
+    "typescript",
+    "bun",
+    "plugin"
+  ],
+  "author": {
+    "name": "Viljami Vastamäki",
+    "url": "https://github.com/vastamaki"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/vastamaki/elysia-router.git"
+  },
+  "bugs": {
+    "url": "https://github.com/vastamaki/elysia-router/issues"
+  },
+  "homepage": "https://github.com/vastamaki/elysia-router#readme",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "files": [
+    "dist/**/*",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "bun run clean && bun run build.ts",
+    "prepublishOnly": "bun run build",
+    "clean": "rm -rf dist"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.2.22",
+    "bun-plugin-dts": "^0.3.0",
+    "elysia": "^1.4.7",
+    "esbuild": "^0.25.10",
+    "typescript": "^5.9.2"
+  },
+  "private": false
+}
