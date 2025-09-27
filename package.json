@@ -1,6 +1,6 @@
 {
   "name": "elysia-router",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "A filesystem-based router plugin for Elysia with automatic route discovery and TypeScript support",
   "keywords": [
     "elysia",

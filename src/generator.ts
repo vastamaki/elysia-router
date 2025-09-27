@@ -24,7 +24,7 @@ export function generateImportMap(options: RouterOptions = {}): void {
 
   const files = scanFiles(baseDir);
   const imports: string[] = [];
-  const routeMapEntries: string[] = [];
+  const routeGroups = new Map<string, Array<{ importName: string; filePath: string }>>();
 
   let importIndex = 0;
   for (const filePath of files) {
@@ -41,7 +41,26 @@ export function generateImportMap(options: RouterOptions = {}): void {
     const relativeFromPlugin = path.relative(pluginSrcDir, filePath);
 
     imports.push(`import ${importName} from "${relativeFromPlugin.replace(/\\/g, "/")}";`);
-    routeMapEntries.push(`  "${routePath}": { handler: ${importName}, filePath: "${relativePath}" }`);
+
+    if (!routeGroups.has(routePath)) {
+      routeGroups.set(routePath, []);
+    }
+    routeGroups.get(routePath)!.push({ importName, filePath: relativePath });
+  }
+
+  const routeMapEntries: string[] = [];
+  for (const [routePath, routes] of routeGroups) {
+    if (routes.length === 1) {
+      // Single route for this path
+      const route = routes[0];
+      routeMapEntries.push(`  "${routePath}": { handler: ${route.importName}, filePath: "${route.filePath}" }`);
+    } else {
+      // Multiple routes for this path - store as array
+      const handlersArray = routes
+        .map((route) => `{ handler: ${route.importName}, filePath: "${route.filePath}" }`)
+        .join(", ");
+      routeMapEntries.push(`  "${routePath}": [${handlersArray}]`);
+    }
   }
 
   const content = `// Auto-generated route map for fs-router

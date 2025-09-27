@@ -49,35 +49,54 @@ export function router(options: RouterOptions = {}) {
 
       logger.info(`Loaded ${path.relative(baseDir, filePath)} at ${routePath} (dynamic)`);
     }
-  }
+  } else if (!isDevelopment) {
+    for (const [routePath, routeInfo] of Object.entries(routeMap)) {
+      const routeInfoArray = Array.isArray(routeInfo) ? routeInfo : [routeInfo];
 
-  for (const [routePath, routeInfo] of Object.entries(routeMap)) {
-    const handler = routeInfo.handler?.default || routeInfo.handler;
+      for (const info of routeInfoArray) {
+        const handler = info.handler?.default || info.handler;
 
-    if (typeof handler !== "function") {
-      logger.warn(`Skipping ${routeInfo.filePath} - invalid handler`);
-      continue;
+        if (typeof handler !== "function") {
+          logger.warn(`Skipping ${info.filePath} - invalid handler`);
+          continue;
+        }
+
+        routes.push({
+          routePath,
+          handler,
+          filePath: info.filePath,
+        });
+
+        logger.info(`Loaded ${info.filePath} at ${routePath}`);
+      }
     }
-
-    routes.push({
-      routePath,
-      handler,
-      filePath: routeInfo.filePath,
-    });
-
-    logger.info(`Loaded ${routeInfo.filePath} at ${routePath}`);
   }
 
   logger.info(`Registered ${routes.length} routes`);
 
   return (app: Elysia) => {
+    const routeGroups = new Map<string, LoadedRoute[]>();
+
     for (const route of routes) {
+      if (!routeGroups.has(route.routePath)) {
+        routeGroups.set(route.routePath, []);
+      }
+      routeGroups.get(route.routePath)!.push(route);
+    }
+
+    for (const [routePath, routeHandlers] of routeGroups) {
       try {
-        app.group(route.routePath, (groupApp) => {
-          return route.handler(groupApp) || groupApp;
+        app.group(routePath, (groupApp) => {
+          for (const route of routeHandlers) {
+            const result = route.handler(groupApp);
+            if (result) {
+              groupApp = result;
+            }
+          }
+          return groupApp;
         });
       } catch (error) {
-        logger.error(`Failed to register route ${route.routePath}:`, error);
+        logger.error(`Failed to register route ${routePath}:`, error);
       }
     }
 
